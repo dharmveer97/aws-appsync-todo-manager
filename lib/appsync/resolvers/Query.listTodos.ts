@@ -1,4 +1,4 @@
-import { Context, DynamoDBScanRequest, util } from '@aws-appsync/utils';
+import type { Context, DynamoDBScanRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBScanRequest {
   const { limit = 20, nextToken, filter } = ctx.arguments;
@@ -9,21 +9,29 @@ export function request(ctx: Context): DynamoDBScanRequest {
     nextToken
   };
 
-  if (filter && (filter.status || filter.priority)) {
+  if (filter) {
     const filters: string[] = [];
     const expressionValues: Record<string, any> = {};
     const expressionNames: Record<string, string> = {};
 
     if (filter.status && filter.status.length > 0) {
-      filters.push('#status IN :statusValues');
       expressionNames['#status'] = 'status';
-      expressionValues[':statusValues'] = filter.status;
+      const statusValues = filter.status.map((s: string, i: number) => {
+        const key = `:status${i}`;
+        expressionValues[key] = s;
+        return key;
+      });
+      filters.push(`#status IN (${statusValues.join(', ')})`);
     }
 
     if (filter.priority && filter.priority.length > 0) {
-      filters.push('#priority IN :priorityValues');
       expressionNames['#priority'] = 'priority';
-      expressionValues[':priorityValues'] = filter.priority;
+      const priorityValues = filter.priority.map((p: string, i: number) => {
+        const key = `:priority${i}`;
+        expressionValues[key] = p;
+        return key;
+      });
+      filters.push(`#priority IN (${priorityValues.join(', ')})`);
     }
 
     if (filters.length > 0) {
@@ -39,14 +47,11 @@ export function request(ctx: Context): DynamoDBScanRequest {
 }
 
 export function response(ctx: Context) {
-  const { error, result } = ctx;
-
-  if (error) {
-    return util.error(error.message, error.type);
+  if (ctx.error) {
+    util.error(ctx.error.message, ctx.error.type);
   }
-
   return {
-    items: result.items,
-    nextToken: result.nextToken
+    items: ctx.result.items,
+    nextToken: ctx.result.nextToken
   };
 }

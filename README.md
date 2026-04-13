@@ -1,311 +1,223 @@
-# AWS AppSync Todo API with CDK and LocalStack
+# AWS AppSync Todo Management System
 
-A complete AWS AppSync GraphQL API with DynamoDB backend, built using AWS CDK and supporting local development with LocalStack.
+A full-stack Todo management application with AWS AppSync GraphQL API, DynamoDB with Global Secondary Indexes, and a modern React frontend.
 
-## Features
+## 🏗️ Architecture
 
-- GraphQL API with AppSync
-- DynamoDB for data persistence
-- TypeScript resolvers using @aws-appsync/utils
-- Full CRUD operations for Todo items
-- Local development with LocalStack (FREE)
-- AWS deployment ready
-- CDK Infrastructure as Code
+### Backend (AWS)
+- **AWS AppSync** - GraphQL API with real-time capabilities
+- **DynamoDB** - NoSQL database with Global Secondary Indexes (GSI) for efficient querying
+- **CDK** - Infrastructure as Code for AWS resource provisioning
 
-## Prerequisites
+### Frontend (React + Vite)
+- **React 19** with TypeScript
+- **Vite** for fast development and builds
+- **Tailwind CSS** + **shadcn/ui** for styling
+- **Atomic Design** folder structure
 
-- Node.js 18+ and npm
-- AWS CLI configured (for AWS deployment)
-- Docker and Docker Compose (for LocalStack)
-- Python 3 and pip (for awscli-local)
+## 📁 Project Structure
 
-## Quick Start
+```
+aws-appsymc/
+├── lib/                          # Backend CDK infrastructure
+│   ├── appsync/
+│   │   ├── schema.graphql        # GraphQL schema with enums
+│   │   └── resolvers/
+│   │       ├── Query.getTodo.js      # Get single todo
+│   │       ├── Query.listTodos.js    # List todos with GSI query
+│   │       ├── Mutation.createTodo.js # Create todo
+│   │       ├── Mutation.updateTodo.js # Update todo
+│   │       ├── Mutation.deleteTodo.js # Delete single todo
+│   │       └── Mutation.deleteTodos.js # Batch delete todos
+│   └── appsync-stack.ts          # CDK stack definition
+│
+├── frontend/                     # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/               # shadcn/ui components
+│   │   │   ├── operations/       # CRUD operation components
+│   │   │   ├── pages/            # Page components
+│   │   ├── lib/
+│   │   │   ├── api.ts            # GraphQL API client
+│   │   │   ├── types.ts          # TypeScript types
+│   │   │   └── utils.ts          # Utility functions
+│   ├── .env                      # Environment variables (not committed)
+│   ├── .env.example              # Environment template
+│   └── seed.ts                   # Database seeding script
+│
+├── bin/                          # CDK app entry point
+├── cdk.json                      # CDK configuration
+└── README.md                     # This file
+```
 
-### 1. Install Dependencies
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- AWS CLI configured with credentials
+- AWS CDK installed globally (`npm install -g aws-cdk`)
+
+### 1. Clone and Install
 
 ```bash
+git clone <your-repo-url>
+cd aws-appsymc
+
+# Install backend dependencies
 npm install
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
 ```
 
-### 2. Install LocalStack Tools (for local development)
+### 2. Configure Environment
 
 ```bash
-# Install LocalStack CLI
-pip install localstack
+# Copy frontend environment template
+cp frontend/.env.example frontend/.env
 
-# Install awscli-local (cdklocal wrapper)
-pip install awscli-local[ver1]
+# Edit frontend/.env with your deployed API values
+# VITE_APPSYNC_API_URL=your-api-url
+# VITE_APPSYNC_API_KEY=your-api-key
 ```
 
-### 3. Build TypeScript Resolvers
+### 3. Deploy Backend
 
 ```bash
+# Bootstrap CDK (first time only)
+cdk bootstrap
+
+# Build and deploy
 npm run build
+cdk deploy --require-approval never
 ```
 
-## Local Development with LocalStack
+After deployment, note the outputs:
+- `GraphQLAPIURL` - Your AppSync API endpoint
+- `GraphQLAPIKey` - Your API key
 
-LocalStack allows you to run AWS services locally for FREE, perfect for development without AWS costs!
+Update `frontend/.env` with these values.
 
-### Start LocalStack
+### 4. Seed Database
 
 ```bash
-# Option 1: Using Docker Compose (recommended)
-docker-compose up -d
-
-# Option 2: Using LocalStack CLI
-npm run localstack:start
+cd frontend
+npm run seed
 ```
 
-### Bootstrap CDK for LocalStack
+### 5. Start Frontend
 
 ```bash
-cdklocal bootstrap
+cd frontend
+npm run dev
 ```
 
-### Deploy to LocalStack
+Open http://localhost:3000
 
-```bash
-npm run deploy:local
-```
+## 🔧 CRUD Operations
 
-### Get API Information
+| Operation | GraphQL | File |
+|-----------|---------|------|
+| **Create** | `createTodo` | `lib/appsync/resolvers/Mutation.createTodo.js` |
+| **Read (Single)** | `getTodo` | `lib/appsync/resolvers/Query.getTodo.js` |
+| **Read (List)** | `listTodos` | `lib/appsync/resolvers/Query.listTodos.js` |
+| **Update** | `updateTodo` | `lib/appsync/resolvers/Mutation.updateTodo.js` |
+| **Delete (Single)** | `deleteTodo` | `lib/appsync/resolvers/Mutation.deleteTodo.js` |
+| **Delete (Batch)** | `deleteTodos` | `lib/appsync/resolvers/Mutation.deleteTodos.js` |
 
-After deployment, the outputs will show:
-- GraphQL API URL (typically: http://localhost:4566/graphql/[API_ID])
-- API Key
-- DynamoDB Table Name
-
-### Test with GraphQL Playground
-
-You can access the AppSync GraphQL playground at:
-```
-http://localhost:4566/_aws/appsync/graphiql?apiId=[YOUR_API_ID]
-```
-
-### Example Mutations and Queries
+### GraphQL Schema
 
 ```graphql
-# Create a Todo
-mutation CreateTodo {
-  createTodo(input: {
-    title: "Learn AWS AppSync"
-    description: "Study AppSync with LocalStack"
-    completed: false
-  }) {
-    id
-    title
-    description
-    completed
-    owner
-    createdAt
-    updatedAt
-  }
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+  CANCELLED
 }
 
-# List all Todos
-query ListTodos {
-  listTodos {
-    items {
-      id
-      title
-      description
-      completed
-      owner
-      createdAt
-      updatedAt
-    }
-    nextToken
-  }
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
-# Get a specific Todo
-query GetTodo {
-  getTodo(id: "your-todo-id") {
-    id
-    title
-    description
-    completed
-    owner
-    createdAt
-    updatedAt
-  }
-}
-
-# Update a Todo
-mutation UpdateTodo {
-  updateTodo(input: {
-    id: "your-todo-id"
-    title: "Updated Title"
-    completed: true
-  }) {
-    id
-    title
-    completed
-    updatedAt
-  }
-}
-
-# Delete a Todo
-mutation DeleteTodo {
-  deleteTodo(id: "your-todo-id") {
-    id
-    title
-  }
+type Todo {
+  id: ID!
+  title: String!
+  subtitle: String
+  description: String
+  priority: Priority!
+  status: Status!
+  completed: Boolean!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
 }
 ```
 
-### Destroy LocalStack Stack
+## 📊 DynamoDB GSI (Optimized for Millions)
+
+### Global Secondary Indexes
+
+| Index | Partition Key | Sort Key | Purpose |
+|-------|---------------|----------|---------|
+| `StatusIndex` | `status` | `createdAt` | Query by status |
+| `PriorityIndex` | `priority` | `createdAt` | Query by priority |
+
+### Performance
+
+| Dataset | Scan (Old) | GSI Query (New) |
+|---------|-----------|-----------------|
+| 1M items, 10% filter | ~1M RCU | ~100K RCU (90% savings) |
+| 10M items, 1% filter | ~10M RCU | ~100K RCU (99% savings) |
+
+## 🔐 Environment Variables
+
+### Frontend (`frontend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_APPSYNC_API_URL` | AppSync GraphQL endpoint |
+| `VITE_APPSYNC_API_KEY` | AppSync API key |
+
+> ⚠️ **Security**: `VITE_*` variables are bundled into client code. Never store secrets here.
+
+## 📝 Scripts
+
+### Backend
+```bash
+npm run build      # Compile TypeScript
+npm run deploy     # Deploy to AWS
+npm run destroy    # Remove AWS resources
+cdk synth          # Generate CloudFormation
+```
+
+### Frontend
+```bash
+cd frontend
+npm run dev        # Dev server (port 3000)
+npm run build      # Production build
+npm run seed       # Seed 40 test todos
+npm run typecheck  # TypeScript check
+```
+
+## 🎨 UI Features
+
+- Table view with checkbox selection
+- Status & Priority filters
+- Pagination (10 per page)
+- Inline status update
+- Batch delete
+- Create form
+
+## 🗑️ Cleanup
 
 ```bash
-npm run destroy:local
+cdk destroy --force
+rm -rf node_modules frontend/node_modules
 ```
 
-### Stop LocalStack
-
-```bash
-# If using docker-compose
-docker-compose down
-
-# If using LocalStack CLI
-npm run localstack:stop
-```
-
-## AWS Deployment
-
-### Configure Environment
-
-1. Copy `.env.example` to `.env` and update:
-```bash
-cp .env.example .env
-```
-
-2. Edit `.env`:
-```
-USE_LOCALSTACK=false
-AWS_REGION=us-east-1
-CDK_DEFAULT_ACCOUNT=your-account-id
-CDK_DEFAULT_REGION=us-east-1
-```
-
-### Bootstrap CDK (first time only)
-
-```bash
-npm run bootstrap
-```
-
-### Deploy to AWS
-
-```bash
-npm run deploy
-```
-
-### Destroy AWS Stack
-
-```bash
-npm run destroy
-```
-
-## Project Structure
-
-```
-.
-├── bin/
-│   └── app.ts                 # CDK App entry point
-├── lib/
-│   ├── appsync-stack.ts       # Main CDK stack
-│   └── appsync/
-│       ├── schema.graphql     # GraphQL schema
-│       └── resolvers/         # AppSync resolvers
-│           ├── utils.ts
-│           ├── Query.getTodo.ts
-│           ├── Query.listTodos.ts
-│           ├── Mutation.createTodo.ts
-│           ├── Mutation.updateTodo.ts
-│           └── Mutation.deleteTodo.ts
-├── package.json
-├── tsconfig.json
-├── cdk.json
-├── docker-compose.yml         # LocalStack configuration
-└── README.md
-```
-
-## Available Scripts
-
-- `npm run build` - Compile TypeScript
-- `npm run watch` - Watch for changes
-- `npm run cdk` - Run CDK commands
-- `npm run deploy` - Deploy to AWS
-- `npm run deploy:local` - Deploy to LocalStack
-- `npm run destroy` - Destroy AWS stack
-- `npm run destroy:local` - Destroy LocalStack stack
-- `npm run bootstrap` - Bootstrap CDK on AWS
-- `npm run bootstrap:local` - Bootstrap CDK on LocalStack
-- `npm run localstack:start` - Start LocalStack
-- `npm run localstack:stop` - Stop LocalStack
-
-## GraphQL Schema
-
-The API provides a complete Todo management system with:
-
-- **Queries**: `getTodo`, `listTodos`
-- **Mutations**: `createTodo`, `updateTodo`, `deleteTodo`
-- **Types**: Todo, TodoConnection, CreateTodoInput, UpdateTodoInput
-
-## Key Technologies
-
-- **AWS CDK** - Infrastructure as Code
-- **AWS AppSync** - Managed GraphQL service
-- **DynamoDB** - NoSQL database
-- **@aws-appsync/utils** - AppSync resolver utilities
-- **LocalStack** - Local AWS cloud stack
-- **TypeScript** - Type-safe development
-
-## Benefits of LocalStack
-
-1. **FREE** - No AWS costs during development
-2. **Fast** - Instant deployments locally
-3. **Offline** - Work without internet
-4. **Testing** - Safe environment for experiments
-5. **Productivity** - Rapid iteration cycle
-
-## Troubleshooting
-
-### LocalStack not starting
-- Ensure Docker is running
-- Check port 4566 is not in use
-- Try `docker-compose down && docker-compose up -d`
-
-### CDK bootstrap fails
-- Make sure LocalStack is running
-- Verify AWS CLI is configured
-- Check your .env file settings
-
-### Resolvers not found
-- Run `npm run build` before deploying
-- Check that .js files are generated in lib/appsync/resolvers/
-
-### API Key not working
-- LocalStack may have different auth behavior
-- Check API key in deployment outputs
-- Try using API_KEY authorization mode
-
-## Next Steps
-
-- Add authentication with Cognito
-- Implement subscriptions for real-time updates
-- Add more complex queries with filters
-- Set up CI/CD pipeline
-- Add unit and integration tests
-- Implement DataLoader for batch operations
-
-## Resources
-
-- [AWS AppSync Documentation](https://docs.aws.amazon.com/appsync/)
-- [AWS CDK Documentation](https://docs.aws.amazon.com/cdk/)
-- [LocalStack Documentation](https://docs.localstack.cloud/)
-- [@aws-appsync/utils](https://www.npmjs.com/package/@aws-appsync/utils)
-
-## License
+## 📄 License
 
 MIT

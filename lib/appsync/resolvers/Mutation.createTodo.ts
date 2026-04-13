@@ -1,4 +1,4 @@
-import { Context, DynamoDBPutItemRequest, util } from '@aws-appsync/utils';
+import type { Context, DynamoDBPutItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBPutItemRequest {
   const { input } = ctx.arguments;
@@ -35,11 +35,8 @@ export function request(ctx: Context): DynamoDBPutItemRequest {
 }
 
 export function response(ctx: Context) {
-  const { error, result } = ctx;
-
-  if (error) {
-    return util.error(error.message, error.type);
+  if (ctx.error) {
+    util.error(ctx.error.message, ctx.error.type);
   }
-
-  return result;
+  return ctx.result;
 }

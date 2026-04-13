@@ -13,6 +13,17 @@ enum Priority {
   URGENT
 }
 
+enum Category {
+  WORK
+  PERSONAL
+  SHOPPING
+  HEALTH
+  FINANCE
+  EDUCATION
+  TRAVEL
+  OTHER
+}
+
 type Todo {
   id: ID!
   title: String!
@@ -20,6 +31,10 @@ type Todo {
   description: String
   priority: Priority!
   status: Status!
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
+  orderIndex: Int!
   completed: Boolean!
   owner: String!
   createdAt: AWSDateTime!
@@ -32,6 +47,9 @@ input CreateTodoInput {
   description: String
   priority: Priority!
   status: Status
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
   completed: Boolean
 }
 
@@ -42,22 +60,37 @@ input UpdateTodoInput {
   description: String
   priority: Priority
   status: Status
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
+  orderIndex: Int
   completed: Boolean
+}
+
+input UpdateOrderInput {
+  id: ID!
+  orderIndex: Int!
 }
 
 input TodoFilterInput {
   status: [Status!]
   priority: [Priority!]
+  category: [Category!]
+  search: String
+  overdue: Boolean
 }
 
 type Query {
   getTodo(id: ID!): Todo
   listTodos(limit: Int, nextToken: String, filter: TodoFilterInput): TodoConnection
+  searchTodos(query: String!, limit: Int, nextToken: String): TodoConnection
 }
 
 type Mutation {
   createTodo(input: CreateTodoInput!): Todo
   updateTodo(input: UpdateTodoInput!): Todo
+  updateTodoOrder(input: UpdateOrderInput!): Todo
+  reorderTodos(todos: [UpdateOrderInput!]!): [Todo]
   deleteTodo(id: ID!): Todo
   deleteTodos(ids: [ID!]!): [Todo]
 }

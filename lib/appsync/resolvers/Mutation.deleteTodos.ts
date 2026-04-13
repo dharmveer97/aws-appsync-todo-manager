@@ -1,4 +1,4 @@
-import { Context, DynamoDBBatchDeleteItemRequest, util } from '@aws-appsync/utils';
+import type { Context, DynamoDBBatchDeleteItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBBatchDeleteItemRequest {
   const { ids } = ctx.arguments;
@@ -20,24 +20,8 @@ export function request(ctx: Context): DynamoDBBatchDeleteItemRequest {
 }
 
 export function response(ctx: Context) {
-  const { error, result } = ctx;
-
-  if (error) {
-    return util.error(error.message, error.type);
+  if (ctx.error) {
+    util.error(ctx.error.message, ctx.error.type);
   }
-
-  const deletedItems = result.Todos || [];
-  
-  return deletedItems.map((item: any) => ({
-    id: item.id,
-    title: item.title,
-    subtitle: item.subtitle,
-    description: item.description,
-    priority: item.priority,
-    status: item.status,
-    completed: item.completed,
-    owner: item.owner,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt
-  }));
+  return ctx.result?.Todos || [];
 }

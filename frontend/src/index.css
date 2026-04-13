@@ -1,0 +1,489 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: oklch(0.96 0.02 75);
+    --foreground: oklch(0.15 0.03 260);
+    --card: oklch(0.99 0.01 75);
+    --card-foreground: oklch(0.15 0.03 260);
+    --popover: oklch(0.99 0.01 75);
+    --popover-foreground: oklch(0.15 0.03 260);
+    --primary: oklch(0.55 0.25 260);
+    --primary-foreground: oklch(0.98 0.01 260);
+    --secondary: oklch(0.75 0.12 35);
+    --secondary-foreground: oklch(0.15 0.03 260);
+    --muted: oklch(0.92 0.02 75);
+    --muted-foreground: oklch(0.45 0.03 260);
+    --accent: oklch(0.85 0.15 150);
+    --accent-foreground: oklch(0.15 0.03 260);
+    --destructive: oklch(0.55 0.22 25);
+    --destructive-foreground: oklch(0.98 0.01 260);
+    --border: oklch(0.85 0.05 260);
+    --input: oklch(0.90 0.03 260);
+    --ring: oklch(0.55 0.25 260);
+    --radius: 0.5rem;
+    
+    --art-deco-gold: oklch(0.75 0.12 75);
+    --art-deco-copper: oklch(0.65 0.10 40);
+    --art-deco-bronze: oklch(0.45 0.08 55);
+    --art-deco-emerald: oklch(0.65 0.18 160);
+    --art-deco-ruby: oklch(0.55 0.22 25);
+    --art-deco-sapphire: oklch(0.45 0.20 260);
+    --art-deco-onyx: oklch(0.15 0.03 260);
+    --art-deco-ivory: oklch(0.98 0.01 260);
+    --art-deco-platinum: oklch(0.92 0.02 260);
+  }
+
+  .dark {
+    --background: oklch(0.12 0.03 260);
+    --foreground: oklch(0.95 0.02 260);
+    --card: oklch(0.18 0.04 260);
+    --card-foreground: oklch(0.95 0.02 260);
+    --popover: oklch(0.18 0.04 260);
+    --popover-foreground: oklch(0.95 0.02 260);
+    --primary: oklch(0.70 0.18 260);
+    --primary-foreground: oklch(0.12 0.03 260);
+    --secondary: oklch(0.80 0.12 75);
+    --secondary-foreground: oklch(0.12 0.03 260);
+    --muted: oklch(0.25 0.04 260);
+    --muted-foreground: oklch(0.65 0.03 260);
+    --accent: oklch(0.70 0.15 160);
+    --accent-foreground: oklch(0.12 0.03 260);
+    --destructive: oklch(0.65 0.22 25);
+    --destructive-foreground: oklch(0.98 0.01 260);
+    --border: oklch(0.30 0.05 260);
+    --input: oklch(0.25 0.04 260);
+    --ring: oklch(0.70 0.18 260);
+    
+    --art-deco-gold: oklch(0.80 0.12 75);
+    --art-deco-copper: oklch(0.70 0.10 40);
+    --art-deco-bronze: oklch(0.50 0.08 55);
+    --art-deco-emerald: oklch(0.70 0.18 160);
+    --art-deco-ruby: oklch(0.65 0.22 25);
+    --art-deco-sapphire: oklch(0.55 0.20 260);
+    --art-deco-onyx: oklch(0.95 0.02 260);
+    --art-deco-ivory: oklch(0.12 0.03 260);
+    --art-deco-platinum: oklch(0.30 0.02 260);
+  }
+  
+  .theme {
+    --font-heading: 'Playfair Display', serif;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-sans: 'JetBrains Mono', monospace;
+  }
+  
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    @apply font-semibold tracking-wide;
+  }
+}
+
+@layer components {
+  .art-deco-border {
+    border: 2px solid var(--art-deco-gold);
+    position: relative;
+  }
+  
+  .art-deco-border::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--art-deco-platinum);
+    pointer-events: none;
+  }
+  
+  .art-deco-corner {
+    position: relative;
+  }
+  
+  .art-deco-corner::before,
+  .art-deco-corner::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--art-deco-gold);
+  }
+  
+  .art-deco-corner::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+  }
+  
+  .art-deco-corner::after {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
+  }
+  
+  .geometric-pattern {
+    background-image: 
+      linear-gradient(30deg, var(--art-deco-platinum) 12%, transparent 12.5%, transparent 87%, var(--art-deco-platinum) 87.5%, var(--art-deco-platinum)),
+      linear-gradient(150deg, var(--art-deco-platinum) 12%, transparent 12.5%, transparent 87%, var(--art-deco-platinum) 87.5%, var(--art-deco-platinum)),
+      linear-gradient(30deg, var(--art-deco-platinum) 12%, transparent 12.5%, transparent 87%, var(--art-deco-platinum) 87.5%, var(--art-deco-platinum)),
+      linear-gradient(150deg, var(--art-deco-platinum) 12%, transparent 12.5%, transparent 87%, var(--art-deco-platinum) 87.5%, var(--art-deco-platinum)),
+      linear-gradient(60deg, var(--art-deco-gold) 25%, transparent 25.5%, transparent 75%, var(--art-deco-gold) 75%, var(--art-deco-gold)),
+      linear-gradient(60deg, var(--art-deco-gold) 25%, transparent 25.5%, transparent 75%, var(--art-deco-gold) 75%, var(--art-deco-gold));
+    background-size: 40px 70px;
+    background-position: 0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px;
+    opacity: 0.15;
+  }
+  
+  .luxury-shadow {
+    box-shadow: 
+      0 1px 1px oklch(0.15 0.03 260 / 5%),
+      0 2px 2px oklch(0.15 0.03 260 / 5%),
+      0 4px 4px oklch(0.15 0.03 260 / 5%),
+      0 8px 8px oklch(0.15 0.03 260 / 5%),
+      0 16px 16px oklch(0.15 0.03 260 / 5%);
+  }
+  
+  .gold-gradient {
+    background: linear-gradient(135deg, var(--art-deco-gold), var(--art-deco-copper), var(--art-deco-bronze));
+  }
+  
+  .status-badge {
+    @apply px-3 py-1 text-xs font-mono uppercase tracking-widest;
+    border: 1px solid currentColor;
+    position: relative;
+  }
+  
+  .status-badge::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid oklch(0.98 0.01 260 / 30%);
+  }
+  
+  .priority-indicator {
+    @apply w-2 h-2 rounded-none;
+    border: 1px solid currentColor;
+  }
+  
+  .category-tag {
+    @apply px-2 py-0.5 text-xs font-mono;
+    border-left: 3px solid currentColor;
+    background: oklch(0.98 0.01 260 / 50%);
+  }
+  
+  .due-date-display {
+    @apply text-sm font-mono;
+    letter-spacing: 0.05em;
+  }
+  
+  .filter-toggle {
+    @apply px-4 py-2 text-sm font-mono uppercase tracking-wider transition-all duration-300;
+    border: 2px solid transparent;
+  }
+  
+  .filter-toggle:hover {
+    border-color: var(--art-deco-gold);
+    transform: translateY(-2px);
+  }
+  
+  .filter-toggle.active {
+    border-color: var(--art-deco-gold);
+    background: var(--art-deco-gold);
+    color: var(--art-deco-ivory);
+  }
+  
+  .todo-row {
+    @apply transition-all duration-300;
+    border-left: 3px solid transparent;
+  }
+  
+  .todo-row:hover {
+    background: oklch(0.98 0.01 260 / 80%);
+    border-left-color: var(--art-deco-gold);
+    transform: translateX(4px);
+  }
+  
+  .todo-row.selected {
+    background: oklch(0.95 0.05 260 / 30%);
+    border-left-color: var(--primary);
+  }
+  
+  .todo-row.overdue {
+    background: oklch(0.55 0.22 25 / 10%);
+    border-left-color: var(--art-deco-ruby);
+  }
+  
+  .todo-row.dragging {
+    opacity: 0.7;
+    background: oklch(0.70 0.18 260 / 20%);
+    border-left-color: var(--primary);
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px oklch(0.15 0.03 260 / 20%);
+  }
+  
+  .todo-row.drag-over {
+    border-top: 2px solid var(--primary);
+    background: oklch(0.70 0.18 260 / 10%);
+  }
+  
+  .create-form {
+    @apply p-6 rounded-none;
+    border: 2px solid var(--art-deco-gold);
+    position: relative;
+  }
+  
+  .create-form::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid var(--art-deco-platinum);
+    pointer-events: none;
+  }
+  
+  .input-field {
+    @apply px-4 py-3 text-sm font-mono;
+    border: 1px solid var(--border);
+    background: var(--card);
+    transition: all 0.3s ease;
+  }
+  
+  .input-field:focus {
+    border-color: var(--art-deco-gold);
+    outline: none;
+    box-shadow: 0 0 0 3px oklch(0.75 0.12 75 / 20%);
+  }
+  
+  .input-field:hover:not(:focus) {
+    border-color: var(--art-deco-platinum);
+  }
+  
+  .button-primary {
+    @apply px-6 py-3 text-sm font-mono uppercase tracking-wider;
+    background: linear-gradient(135deg, var(--art-deco-gold), var(--art-deco-copper));
+    border: 2px solid var(--art-deco-gold);
+    color: var(--art-deco-ivory);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .button-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: oklch(0.98 0.01 260 / 20%);
+    border-radius: 50%;
+    transition: width 0.6s ease, height 0.6s ease;
+    transform: translate(-50%, -50%);
+  }
+  
+  .button-primary:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .button-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px oklch(0.75 0.12 75 / 30%);
+  }
+  
+  .button-secondary {
+    @apply px-6 py-3 text-sm font-mono uppercase tracking-wider;
+    border: 2px solid var(--art-deco-platinum);
+    background: transparent;
+    color: var(--foreground);
+    transition: all 0.3s ease;
+  }
+  
+  .button-secondary:hover {
+    border-color: var(--art-deco-gold);
+    transform: translateY(-2px);
+  }
+  
+  .button-destructive {
+    @apply px-6 py-3 text-sm font-mono uppercase tracking-wider;
+    border: 2px solid var(--art-deco-ruby);
+    background: transparent;
+    color: var(--art-deco-ruby);
+    transition: all 0.3s ease;
+  }
+  
+  .button-destructive:hover {
+    background: var(--art-deco-ruby);
+    color: var(--art-deco-ivory);
+    transform: translateY(-2px);
+  }
+  
+  .pagination-button {
+    @apply px-4 py-2 text-sm font-mono;
+    border: 1px solid var(--border);
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+  
+  .pagination-button:hover:not(:disabled) {
+    border-color: var(--art-deco-gold);
+    transform: translateY(-1px);
+  }
+  
+  .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .table-header {
+    @apply py-4 text-xs font-mono uppercase tracking-widest text-muted-foreground;
+    border-bottom: 2px solid var(--art-deco-gold);
+  }
+  
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    @apply text-xl font-semibold mb-4 tracking-wide;
+    position: relative;
+    padding-bottom: 8px;
+  }
+  
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--art-deco-gold);
+  }
+  
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    @apply text-3xl font-bold tracking-wide;
+    position: relative;
+  }
+  
+  .page-title::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--art-deco-gold), var(--art-deco-copper));
+  }
+  
+  .loading-skeleton {
+    @apply animate-pulse;
+    background: linear-gradient(90deg, 
+      oklch(0.92 0.02 75) 25%, 
+      oklch(0.96 0.02 75) 50%, 
+      oklch(0.92 0.02 75) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fade-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes geometric-expand {
+    from {
+      clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    }
+    to {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  
+  .animate-fade-in-left {
+    animation: fade-in-left 0.4s ease-out forwards;
+  }
+  
+  .animate-geometric-expand {
+    animation: geometric-expand 0.5s ease-out forwards;
+  }
+  
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
+  .stagger-7 { animation-delay: 0.7s; }
+  .stagger-8 { animation-delay: 0.8s; }
+  .stagger-9 { animation-delay: 0.9s; }
+  .stagger-10 { animation-delay: 1s; }
+}
+
+@layer utilities {
+  .text-art-deco-gold { color: var(--art-deco-gold); }
+  .text-art-deco-copper { color: var(--art-deco-copper); }
+  .text-art-deco-bronze { color: var(--art-deco-bronze); }
+  .text-art-deco-emerald { color: var(--art-deco-emerald); }
+  .text-art-deco-ruby { color: var(--art-deco-ruby); }
+  .text-art-deco-sapphire { color: var(--art-deco-sapphire); }
+  .text-art-deco-onyx { color: var(--art-deco-onyx); }
+  .text-art-deco-ivory { color: var(--art-deco-ivory); }
+  .text-art-deco-platinum { color: var(--art-deco-platinum); }
+  
+  .bg-art-deco-gold { background-color: var(--art-deco-gold); }
+  .bg-art-deco-copper { background-color: var(--art-deco-copper); }
+  .bg-art-deco-bronze { background-color: var(--art-deco-bronze); }
+  .bg-art-deco-emerald { background-color: var(--art-deco-emerald); }
+  .bg-art-deco-ruby { background-color: var(--art-deco-ruby); }
+  .bg-art-deco-sapphire { background-color: var(--art-deco-sapphire); }
+  .bg-art-deco-onyx { background-color: var(--art-deco-onyx); }
+  .bg-art-deco-ivory { background-color: var(--art-deco-ivory); }
+  .bg-art-deco-platinum { background-color: var(--art-deco-platinum); }
+  
+  .border-art-deco-gold { border-color: var(--art-deco-gold); }
+  .border-art-deco-copper { border-color: var(--art-deco-copper); }
+  .border-art-deco-bronze { border-color: var(--art-deco-bronze); }
+  .border-art-deco-emerald { border-color: var(--art-deco-emerald); }
+  .border-art-deco-ruby { border-color: var(--art-deco-ruby); }
+  .border-art-deco-sapphire { border-color: var(--art-deco-sapphire); }
+  .border-art-deco-onyx { border-color: var(--art-deco-onyx); }
+  .border-art-deco-ivory { border-color: var(--art-deco-ivory); }
+  .border-art-deco-platinum { border-color: var(--art-deco-platinum); }
+}
