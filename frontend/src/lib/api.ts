@@ -5,10 +5,14 @@ const API_URL = import.meta.env.VITE_APPSYNC_API_URL;
 const API_KEY = import.meta.env.VITE_APPSYNC_API_KEY;
 
 if (!API_URL || !API_KEY) {
-  throw new Error('Missing VITE_APPSYNC_API_URL or VITE_APPSYNC_API_KEY in environment variables');
+  console.warn('Missing VITE_APPSYNC_API_URL or VITE_APPSYNC_API_KEY in environment variables');
 }
 
 async function fetchGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+  if (!API_URL || !API_KEY) {
+    throw new Error('API not configured. Check VITE_APPSYNC_API_URL and VITE_APPSYNC_API_KEY');
+  }
+  
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
