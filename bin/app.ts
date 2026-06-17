@@ -13,6 +13,9 @@ const app = new cdk.App();
 const isLocalStack = process.env.USE_LOCALSTACK === 'true';
 
 const stackProps: cdk.StackProps = {
+  synthesizer: isLocalStack ? undefined : new cdk.DefaultStackSynthesizer({
+    qualifier: 'todoapp'
+  }),
   env: {
     account: isLocalStack ? '000000000000' : process.env.CDK_DEFAULT_ACCOUNT,
     region: isLocalStack ? 'us-east-1' : (process.env.CDK_DEFAULT_REGION || 'us-east-1')

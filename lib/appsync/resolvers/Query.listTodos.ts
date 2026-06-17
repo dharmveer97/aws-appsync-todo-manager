@@ -1,10 +1,18 @@
-import type { Context, DynamoDBScanRequest } from '@aws-appsync/utils';
+import { util } from '@aws-appsync/utils';
+import type { Context, DynamoDBQueryRequest } from '@aws-appsync/utils';
 
-export function request(ctx: Context): DynamoDBScanRequest {
+export function request(ctx: Context): DynamoDBQueryRequest {
   const { limit = 20, nextToken, filter } = ctx.arguments;
 
-  const request: DynamoDBScanRequest = {
-    operation: 'Scan',
+  const queryRequest: DynamoDBQueryRequest = {
+    operation: 'Query',
+    index: 'ActiveIndex',
+    query: {
+      expression: 'activePartition = :activePartition',
+      expressionValues: {
+        ':activePartition': { S: 'ALL_ACTIVE' }
+      }
+    },
     limit,
     nextToken
   };
@@ -34,8 +42,25 @@ export function request(ctx: Context): DynamoDBScanRequest {
       filters.push(`#priority IN (${priorityValues.join(', ')})`);
     }
 
+    if (filter.category && filter.category.length > 0) {
+      expressionNames['#category'] = 'category';
+      const categoryValues = filter.category.map((c: string, i: number) => {
+        const key = `:category${i}`;
+        expressionValues[key] = c;
+        return key;
+      });
+      filters.push(`#category IN (${categoryValues.join(', ')})`);
+    }
+
+    if (filter.search) {
+      expressionNames['#title'] = 'title';
+      expressionNames['#description'] = 'description';
+      expressionValues[':search'] = filter.search;
+      filters.push('(contains(#title, :search) OR contains(#description, :search))');
+    }
+
     if (filters.length > 0) {
-      request.filter = {
+      queryRequest.filter = {
         expression: filters.join(' AND '),
         expressionNames,
         expressionValues: util.dynamodb.toMapValues(expressionValues)
@@ -43,7 +68,7 @@ export function request(ctx: Context): DynamoDBScanRequest {
     }
   }
 
-  return request;
+  return queryRequest;
 }
 
 export function response(ctx: Context) {

@@ -1,3 +1,4 @@
+import { util } from '@aws-appsync/utils';
 import type { Context, DynamoDBUpdateItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBUpdateItemRequest {
@@ -8,8 +9,21 @@ export function request(ctx: Context): DynamoDBUpdateItemRequest {
   values.updatedAt = now;
 
   const sets: string[] = [];
+  const removes: string[] = [];
   const names: Record<string, string> = {};
   const valuesObj: Record<string, any> = {};
+
+  // Adjust activePartition based on status updates
+  if (values.status !== undefined) {
+    if (values.status === 'ARCHIVED') {
+      removes.push('#activePartition');
+      names['#activePartition'] = 'activePartition';
+    } else {
+      sets.push('#activePartition = :activePartition');
+      names['#activePartition'] = 'activePartition';
+      valuesObj[':activePartition'] = 'ALL_ACTIVE';
+    }
+  }
 
   Object.keys(values).forEach((key) => {
     if (values[key] !== undefined) {
@@ -23,13 +37,18 @@ export function request(ctx: Context): DynamoDBUpdateItemRequest {
     util.error('No fields to update', 'BadRequest');
   }
 
+  let expression = `SET ${sets.join(', ')}`;
+  if (removes.length > 0) {
+    expression += ` REMOVE ${removes.join(', ')}`;
+  }
+
   return {
     operation: 'UpdateItem',
     key: {
       id: { S: id }
     },
     update: {
-      expression: `SET ${sets.join(', ')}`,
+      expression,
       expressionNames: names,
       expressionValues: util.dynamodb.toMapValues(valuesObj)
     }

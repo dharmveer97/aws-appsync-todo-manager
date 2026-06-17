@@ -82,6 +82,18 @@ export class AppSyncTodoStack extends cdk.Stack {
       }
     });
 
+    todosTable.addGlobalSecondaryIndex({
+      indexName: 'ActiveIndex',
+      partitionKey: {
+        name: 'activePartition',
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: 'createdAt',
+        type: dynamodb.AttributeType.STRING
+      }
+    });
+
     // AppSync GraphQL API
     const api = new appsync.GraphqlApi(this, 'TodoApi', {
       name: 'todo-api',
@@ -165,13 +177,34 @@ export class AppSyncTodoStack extends cdk.Stack {
       )
     });
 
-    todosDataSource.createResolver('DeleteTodosResolver', {
+    const deleteTodosGetFn = new appsync.AppsyncFunction(this, 'DeleteTodosGetFn', {
+      api,
+      name: 'DeleteTodosGetFn',
+      dataSource: todosDataSource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosGet.js')
+      )
+    });
+
+    const deleteTodosUpdateFn = new appsync.AppsyncFunction(this, 'DeleteTodosUpdateFn', {
+      api,
+      name: 'DeleteTodosUpdateFn',
+      dataSource: todosDataSource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosUpdate.js')
+      )
+    });
+
+    api.createResolver('DeleteTodosResolver', {
       typeName: 'Mutation',
       fieldName: 'deleteTodos',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodos.js')
-      )
+        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosPipeline.js')
+      ),
+      pipelineConfig: [deleteTodosGetFn, deleteTodosUpdateFn]
     });
 
     todosDataSource.createResolver('UpdateTodoOrderResolver', {

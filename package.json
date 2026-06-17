@@ -4,7 +4,7 @@
   "description": "AWS AppSync Todo API with CDK and LocalStack support",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p lib/appsync/resolvers/tsconfig.json && mkdir -p dist/lib/appsync && cp lib/appsync/schema.graphql dist/lib/appsync/schema.graphql",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",

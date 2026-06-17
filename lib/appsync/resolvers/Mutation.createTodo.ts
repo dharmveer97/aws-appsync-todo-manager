@@ -1,3 +1,4 @@
+import { util } from '@aws-appsync/utils';
 import type { Context, DynamoDBPutItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBPutItemRequest {
@@ -11,7 +12,7 @@ export function request(ctx: Context): DynamoDBPutItemRequest {
     owner = identity.sub || identity.username || 'anonymous';
   }
 
-  const todo = {
+  const todo: Record<string, any> = {
     __typename: 'Todo',
     id,
     title: input.title,
@@ -22,8 +23,13 @@ export function request(ctx: Context): DynamoDBPutItemRequest {
     completed: input.completed || false,
     owner,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    orderIndex: Math.floor(util.time.nowEpochMilliSeconds() / 1000)
   };
+
+  if (todo.status !== 'ARCHIVED') {
+    todo.activePartition = 'ALL_ACTIVE';
+  }
 
   return {
     operation: 'PutItem',

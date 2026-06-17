@@ -1,3 +1,4 @@
+import { util } from '@aws-appsync/utils';
 import type { Context, DynamoDBGetItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBGetItemRequest {
@@ -15,5 +16,9 @@ export function response(ctx: Context) {
   if (ctx.error) {
     util.error(ctx.error.message, ctx.error.type);
   }
-  return ctx.result;
+  const result = ctx.result;
+  if (result && result.status === 'ARCHIVED') {
+    return null;
+  }
+  return result;
 }

@@ -366,8 +366,9 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [nextToken, setNextToken] = useState<string | undefined>();
-  const [prevTokens, setPrevTokens] = useState<string[]>([]);
+  const [currentToken, setCurrentToken] = useState<string | undefined>(undefined);
+  const [nextToken, setNextToken] = useState<string | undefined>(undefined);
+  const [prevTokens, setPrevTokens] = useState<(string | undefined)[]>([]);
   const [loading, setLoading] = useState(false);
 
   const selectedIdsRef = useRef<Set<string>>(new Set());
@@ -422,16 +423,13 @@ export function TodoPage() {
   ]);
 
   const loadTodos = useCallback(
-    async (token?: string, isNext: boolean = true) => {
+    async (token?: string) => {
       setLoading(true);
       try {
         const result = await listTodos(10, token, filter);
         setTodos(result.items || []);
         setNextToken(result.nextToken);
-
-        if (isNext && token) {
-          setPrevTokens((prev) => [...prev, token]);
-        }
+        setCurrentToken(token);
         setSelectedIds(new Set());
         selectedIdsRef.current = new Set();
       } catch (error) {
@@ -444,19 +442,23 @@ export function TodoPage() {
   );
 
   useEffect(() => {
-    loadTodos(undefined, false);
+    setPrevTokens([]);
+    loadTodos(undefined);
   }, [loadTodos]);
 
   const handleNextPage = useCallback(() => {
     if (nextToken) {
-      loadTodos(nextToken, true);
+      setPrevTokens((prev) => [...prev, currentToken]);
+      loadTodos(nextToken);
     }
-  }, [nextToken, loadTodos]);
+  }, [nextToken, currentToken, loadTodos]);
 
   const handlePrevPage = useCallback(() => {
-    const lastToken = prevTokens[prevTokens.length - 1];
-    setPrevTokens((prev) => prev.slice(0, -1));
-    loadTodos(lastToken || undefined, false);
+    if (prevTokens.length > 0) {
+      const prevToken = prevTokens[prevTokens.length - 1];
+      setPrevTokens((prev) => prev.slice(0, -1));
+      loadTodos(prevToken);
+    }
   }, [prevTokens, loadTodos]);
 
   const handleSelectAll = useCallback(
@@ -492,12 +494,12 @@ export function TodoPage() {
         await deleteTodos(ids);
         setSelectedIds(new Set());
         selectedIdsRef.current = new Set();
-        loadTodos(prevTokens[prevTokens.length - 1] || undefined, false);
+        loadTodos(currentToken);
       } catch (error) {
         console.error('Failed to delete:', error);
       }
     });
-  }, [prevTokens, loadTodos]);
+  }, [currentToken, loadTodos]);
 
   const handleStatusChange = useCallback(
     async (id: string, newStatus: Status) => {
@@ -547,7 +549,7 @@ export function TodoPage() {
         setNewCategory('');
         setNewTags([]);
         setNewDueDate(undefined);
-        loadTodos(prevTokens[prevTokens.length - 1] || undefined, false);
+        loadTodos(currentToken);
       } catch (error) {
         console.error('Failed to create todo:', error);
       }
@@ -561,9 +563,61 @@ export function TodoPage() {
     newCategory,
     newTags,
     newDueDate,
-    prevTokens,
+    currentToken,
     loadTodos,
   ]);
+
+  const handleGenerateRandomTodos = useCallback(async () => {
+    startTransition(async () => {
+      try {
+        const titles = [
+          'Design Database Schema',
+          'Optimize GSI Query Performance',
+          'Implement Sparse GSI Soft-Delete',
+          'Write Integration Tests',
+          'Configure CDK Stack Deploy',
+          'Debug Hydration Error',
+          'Audit AWS IAM Permissions',
+          'Refactor AppSync Resolvers',
+          'Set Up Frontend Dev Server',
+          'Write Project Documentation'
+        ];
+        const descriptions = [
+          'Establish partition keys and sort keys for optimal access patterns.',
+          'Analyze query costs and replace scans with query operations.',
+          'Verify that archived items are excluded from index results.',
+          'Run batch queries and verify pagination doesn\'t collapse.',
+          'Use custom qualifiers to prevent bootstrap stack conflicts.',
+          'Fix PopoverTrigger asChild rendering duplicate button components.',
+          'Grant least privilege access roles for AppSync data sources.',
+          'Migrate resolvers from CommonJS to ESNext standard modules.',
+          'Install node dependencies and initialize Vite configuration.',
+          'Describe the sparse GSI pattern and test verify results.'
+        ];
+        const priorities: Priority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+        const categories: Category[] = ['WORK', 'PERSONAL', 'SHOPPING', 'HEALTH', 'FINANCE', 'EDUCATION', 'TRAVEL', 'OTHER'];
+        
+        for (let i = 0; i < 10; i++) {
+          const title = titles[Math.floor(Math.random() * titles.length)] + ` (${Math.floor(Math.random() * 900 + 100)})`;
+          const description = descriptions[Math.floor(Math.random() * descriptions.length)];
+          const priority = priorities[Math.floor(Math.random() * priorities.length)];
+          const category = categories[Math.floor(Math.random() * categories.length)];
+          
+          await createTodo({
+            title,
+            description,
+            priority,
+            status: 'PENDING',
+            category
+          });
+        }
+        
+        loadTodos(undefined);
+      } catch (error) {
+        console.error('Failed to generate random todos:', error);
+      }
+    });
+  }, [loadTodos]);
 
   const toggleStatusFilter = useCallback((status: Status) => {
     setStatusFilter((curr) =>
@@ -641,10 +695,10 @@ export function TodoPage() {
         }
       } catch (error) {
         console.error('Failed to reorder:', error);
-        loadTodos(prevTokens[prevTokens.length - 1] || undefined, false);
+        loadTodos(currentToken);
       }
     });
-  }, [todos, prevTokens, loadTodos]);
+  }, [todos, currentToken, loadTodos]);
 
   const handleDeleteOne = useCallback(
     (id: string) => {
@@ -684,10 +738,22 @@ export function TodoPage() {
 
         <section className="border-2 border-primary/20 rounded-lg p-6 bg-card shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full" />
-          <h2 className="text-xl font-semibold mb-6 tracking-wide relative">
-            New Entry
-            <div className="absolute bottom-0 left-0 w-20 h-1 bg-gradient-to-r from-primary to-primary/50 rounded-full -mb-2" />
-          </h2>
+          <div className="flex justify-between items-center mb-6 relative">
+            <h2 className="text-xl font-semibold tracking-wide">
+              New Entry
+              <div className="absolute bottom-0 left-0 w-20 h-1 bg-gradient-to-r from-primary to-primary/50 rounded-full -mb-2" />
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateRandomTodos}
+              disabled={isPending || loading}
+              className="font-mono text-xs uppercase tracking-wider gap-2 hover:bg-primary/10 hover:text-primary transition-all duration-200"
+            >
+              <Plus className="h-3 w-3" />
+              Generate 10 Test Tasks
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
@@ -782,15 +848,17 @@ export function TodoPage() {
                 Due Date
               </label>
               <Popover>
-                <PopoverTrigger className="w-full">
-                  <Button
-                    variant="outline"
-                    className="w-full font-mono justify-start"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {newDueDate ? format(newDueDate, 'PPP') : 'Select date'}
-                  </Button>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      className="w-full font-mono justify-start"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newDueDate ? format(newDueDate, 'PPP') : 'Select date'}
+                    </Button>
+                  }
+                />
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
