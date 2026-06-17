@@ -73,7 +73,7 @@ If the database grows to millions of items, two main challenges occur:
 * [Query.getTodo.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Query.getTodo.ts): Returns null if the item status is archived.
 * [Mutation.createTodo.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Mutation.createTodo.ts): Automatically adds `activePartition = 'ALL_ACTIVE'` and generates `orderIndex` timestamp.
 * [Mutation.updateTodo.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Mutation.updateTodo.ts): Safely manages adding/removing `activePartition` on status updates.
-* [Mutation.deleteTodo.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Mutation.deleteTodo.ts): Sets status to `ARCHIVED` and removes `activePartition` attribute.
+* [Mutation.deleteTodo.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Mutation.deleteTodo.ts): Soft-deletes a task using the `ddb.update` helper by updating status to `ARCHIVED` and removing `activePartition` with `ddb.operations.remove()`.
 * [Mutation.deleteTodosUpdate.ts](file:///Users/dharamveerbangar/Projects/aws-appsync-todo-manager/lib/appsync/resolvers/Mutation.deleteTodosUpdate.ts): Batch-archives multiple tasks.
 
 ### Frontend

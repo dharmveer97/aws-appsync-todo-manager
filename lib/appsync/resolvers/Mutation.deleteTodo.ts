@@ -1,29 +1,19 @@
 import { util } from '@aws-appsync/utils';
 import type { Context, DynamoDBUpdateItemRequest } from '@aws-appsync/utils';
-// import * as ddb from '@aws-appsync/utils/dynamodb';
+import * as ddb from '@aws-appsync/utils/dynamodb';
 
 export function request(ctx: Context): DynamoDBUpdateItemRequest {
   const { id } = ctx.arguments;
   const now = util.time.nowISO8601();
-  return {
-    operation: 'UpdateItem',
-    key: {
-      id: { S: id },
-    },
+
+  return ddb.update({
+    key: { id },
     update: {
-      expression:
-        'SET #status = :status, #updatedAt = :updatedAt REMOVE #activePartition',
-      expressionNames: {
-        '#status': 'status',
-        '#updatedAt': 'updatedAt',
-        '#activePartition': 'activePartition',
-      },
-      expressionValues: util.dynamodb.toMapValues({
-        ':status': 'ARCHIVED',
-        ':updatedAt': now,
-      }),
+      status: 'ARCHIVED',
+      updatedAt: now,
+      activePartition: ddb.operations.remove(),
     },
-  };
+  });
 }
 
 export function response(ctx: Context) {
