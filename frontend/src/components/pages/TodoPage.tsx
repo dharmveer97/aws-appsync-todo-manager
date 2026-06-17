@@ -13,6 +13,7 @@ import {
   updateTodo,
   createTodo,
   updateTodoOrder,
+  getStats,
 } from '@/lib/api';
 import type {
   Todo,
@@ -370,6 +371,16 @@ export function TodoPage() {
   const [nextToken, setNextToken] = useState<string | undefined>(undefined);
   const [prevTokens, setPrevTokens] = useState<(string | undefined)[]>([]);
   const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const stats = await getStats('todos_count');
+      setTotalCount(stats ? stats.count : 0);
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  }, []);
 
   const selectedIdsRef = useRef<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -444,7 +455,8 @@ export function TodoPage() {
   useEffect(() => {
     setPrevTokens([]);
     loadTodos(undefined);
-  }, [loadTodos]);
+    loadStats();
+  }, [loadTodos, loadStats]);
 
   const handleNextPage = useCallback(() => {
     if (nextToken) {
@@ -495,11 +507,12 @@ export function TodoPage() {
         setSelectedIds(new Set());
         selectedIdsRef.current = new Set();
         loadTodos(currentToken);
+        loadStats();
       } catch (error) {
         console.error('Failed to delete:', error);
       }
     });
-  }, [currentToken, loadTodos]);
+  }, [currentToken, loadTodos, loadStats]);
 
   const handleStatusChange = useCallback(
     async (id: string, newStatus: Status) => {
@@ -550,6 +563,7 @@ export function TodoPage() {
         setNewTags([]);
         setNewDueDate(undefined);
         loadTodos(currentToken);
+        loadStats();
       } catch (error) {
         console.error('Failed to create todo:', error);
       }
@@ -565,6 +579,7 @@ export function TodoPage() {
     newDueDate,
     currentToken,
     loadTodos,
+    loadStats,
   ]);
 
   const handleGenerateRandomTodos = useCallback(async () => {
@@ -613,11 +628,12 @@ export function TodoPage() {
         }
         
         loadTodos(undefined);
+        loadStats();
       } catch (error) {
         console.error('Failed to generate random todos:', error);
       }
     });
-  }, [loadTodos]);
+  }, [loadTodos, loadStats]);
 
   const toggleStatusFilter = useCallback((status: Status) => {
     setStatusFilter((curr) =>
@@ -731,6 +747,9 @@ export function TodoPage() {
               </div>
               <div className="text-xs text-muted-foreground font-mono">
                 {todos.length} items displayed
+              </div>
+              <div className="text-xs text-green-700 font-bold font-mono mt-1 bg-green-50 px-2 py-0.5 rounded border border-green-200 inline-block">
+                Total Active: {totalCount !== null ? totalCount : 'Loading...'}
               </div>
             </div>
           </div>

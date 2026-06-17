@@ -82,6 +82,7 @@ input TodoFilterInput {
 
 type Query {
   getTodo(id: ID!): Todo
+  getStats(id: ID!): Stats
   listTodos(limit: Int, nextToken: String, filter: TodoFilterInput): TodoConnection
   searchTodos(query: String!, limit: Int, nextToken: String): TodoConnection
 }
@@ -98,6 +99,11 @@ type Mutation {
 type TodoConnection {
   items: [Todo]
   nextToken: String
+}
+
+type Stats {
+  id: ID!
+  count: Int!
 }
 
 type DeleteResult {

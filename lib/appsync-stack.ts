@@ -94,6 +94,17 @@ export class AppSyncTodoStack extends cdk.Stack {
       }
     });
 
+    // Stats Table for analytics/counters
+    const statsTable = new dynamodb.Table(this, 'StatsTable', {
+      tableName: 'Stats',
+      partitionKey: {
+        name: 'id',
+        type: dynamodb.AttributeType.STRING
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
     // AppSync GraphQL API
     const api = new appsync.GraphqlApi(this, 'TodoApi', {
       name: 'todo-api',
@@ -121,6 +132,15 @@ export class AppSyncTodoStack extends cdk.Stack {
       todosTable
     );
 
+    // Grant Stats table read/write access to the TodosDataSource IAM role
+    statsTable.grantReadWriteData(todosDataSource);
+
+    // Stats Data Source
+    const statsDataSource = api.addDynamoDbDataSource(
+      'StatsDataSource',
+      statsTable
+    );
+
     // Query Resolvers
     todosDataSource.createResolver('GetTodoResolver', {
       typeName: 'Query',
@@ -128,6 +148,15 @@ export class AppSyncTodoStack extends cdk.Stack {
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
         path.join(__dirname, 'appsync/resolvers/Query.getTodo.js')
+      )
+    });
+
+    statsDataSource.createResolver('GetStatsResolver', {
+      typeName: 'Query',
+      fieldName: 'getStats',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, 'appsync/resolvers/Query.getStats.js')
       )
     });
 

@@ -61,3 +61,8 @@ export interface TodoFilterInput {
   search?: string;
   overdue?: boolean;
 }
+
+export interface Stats {
+  id: string;
+  count: number;
+}

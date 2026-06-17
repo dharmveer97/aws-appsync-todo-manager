@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import type { Todo, TodoConnection, CreateTodoInput, UpdateTodoInput, TodoFilterInput, UpdateOrderInput } from './types';
+import type { Todo, TodoConnection, CreateTodoInput, UpdateTodoInput, TodoFilterInput, UpdateOrderInput, Stats } from './types';
 
 const API_URL = import.meta.env.VITE_APPSYNC_API_URL;
 const API_KEY = import.meta.env.VITE_APPSYNC_API_KEY;
@@ -181,6 +181,19 @@ export const listTodos = async (
   });
   return data.listTodos;
 };
+
+export async function getStats(id: string): Promise<Stats | null> {
+  const query = `
+    query GetStats($id: ID!) {
+      getStats(id: $id) {
+        id
+        count
+      }
+    }
+  `;
+  const data = await fetchGraphQL<{ getStats: Stats | null }>(query, { id });
+  return data.getStats;
+}
 
 export function useSWRMutation<T, U>(
   key: string,

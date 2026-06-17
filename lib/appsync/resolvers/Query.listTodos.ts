@@ -13,6 +13,7 @@ export function request(ctx: Context): DynamoDBQueryRequest {
         ':activePartition': { S: 'ALL_ACTIVE' }
       }
     },
+    scanIndexForward: false,
     limit,
     nextToken
   };
