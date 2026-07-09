@@ -59,6 +59,9 @@ import {
   AlertCircle,
   X,
   Tag,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { format, isPast, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -158,6 +161,7 @@ interface TodoRowProps {
   dragOverId: string | null;
   isPending: boolean;
   index: number;
+  isSortingActive?: boolean;
 }
 
 const TodoRow = memo(function TodoRow({
@@ -172,6 +176,7 @@ const TodoRow = memo(function TodoRow({
   dragOverId,
   isPending,
   index,
+  isSortingActive = false,
 }: TodoRowProps) {
   const overdue = isOverdue(todo);
   const isDragging = useRef(false);
@@ -192,18 +197,24 @@ const TodoRow = memo(function TodoRow({
         'transition-all duration-200',
         isSelected && 'bg-primary/5',
         overdue && 'bg-red-50',
-        dragOverId === todo.id && 'bg-blue-50 border-t-2 border-t-primary',
+        !isSortingActive && dragOverId === todo.id && 'bg-blue-50 border-t-2 border-t-primary',
         'hover:bg-muted/50 hover:translate-x-1',
         'border-l-2 border-l-transparent hover:border-l-primary',
       )}
       style={{ animationDelay: `${index * 30}ms` }}
-      draggable
-      onDragStart={handleDragStart}
-      onDragOver={(e) => onDragOver(e, todo)}
-      onDragEnd={handleDragEnd}
+      draggable={!isSortingActive}
+      onDragStart={!isSortingActive ? handleDragStart : undefined}
+      onDragOver={!isSortingActive ? (e) => onDragOver(e, todo) : undefined}
+      onDragEnd={!isSortingActive ? handleDragEnd : undefined}
     >
       <TableCell className="w-[30px]">
-        <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground hover:text-foreground transition-colors" />
+        {!isSortingActive ? (
+          <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground hover:text-foreground transition-colors" />
+        ) : (
+          <div title="Reordering is disabled when sorting is active">
+            <GripVertical className="h-4 w-4 text-muted-foreground/30 cursor-not-allowed" />
+          </div>
+        )}
       </TableCell>
       <TableCell className="w-[50px]">
         <Checkbox
@@ -372,6 +383,31 @@ export function TodoPage() {
   const [prevTokens, setPrevTokens] = useState<(string | undefined)[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [prioritySort, setPrioritySort] = useState<'asc' | 'desc' | null>(null);
+
+  const priorityOrder: Record<Priority, number> = useMemo(() => ({
+    LOW: 0,
+    MEDIUM: 1,
+    HIGH: 2,
+    URGENT: 3,
+  }), []);
+
+  const sortedTodos = useMemo(() => {
+    if (!prioritySort) return todos;
+    return [...todos].sort((a, b) => {
+      const rankA = priorityOrder[a.priority] ?? 0;
+      const rankB = priorityOrder[b.priority] ?? 0;
+      return prioritySort === 'asc' ? rankA - rankB : rankB - rankA;
+    });
+  }, [todos, prioritySort, priorityOrder]);
+
+  const togglePrioritySort = useCallback(() => {
+    setPrioritySort((prev) => {
+      if (prev === null) return 'desc';
+      if (prev === 'desc') return 'asc';
+      return null;
+    });
+  }, []);
 
   const loadStats = useCallback(async () => {
     try {
@@ -1045,8 +1081,16 @@ export function TodoPage() {
                 <TableHead className="font-mono uppercase tracking-widest text-xs">
                   Due
                 </TableHead>
-                <TableHead className="font-mono uppercase tracking-widest text-xs">
-                  Priority
+                <TableHead 
+                  className="font-mono uppercase tracking-widest text-xs cursor-pointer select-none hover:text-foreground transition-colors"
+                  onClick={togglePrioritySort}
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Priority</span>
+                    {prioritySort === 'desc' && <ArrowDown className="h-3.5 w-3.5 text-primary" />}
+                    {prioritySort === 'asc' && <ArrowUp className="h-3.5 w-3.5 text-primary" />}
+                    {!prioritySort && <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground transition-colors" />}
+                  </div>
                 </TableHead>
                 <TableHead className="font-mono uppercase tracking-widest text-xs">
                   Status
@@ -1077,7 +1121,7 @@ export function TodoPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                todos.map((todo, index) => (
+                sortedTodos.map((todo, index) => (
                   <TodoRow
                     key={todo.id}
                     todo={todo}
@@ -1091,6 +1135,7 @@ export function TodoPage() {
                     dragOverId={dragOverId}
                     isPending={isPending}
                     index={index}
+                    isSortingActive={!!prioritySort}
                   />
                 ))
               )}
