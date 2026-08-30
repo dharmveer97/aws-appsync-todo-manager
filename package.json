@@ -1,7 +1,7 @@
 {
   "name": "aws-appsync-cdk-localstack",
   "version": "1.0.0",
-  "description": "AWS AppSync Todo API with CDK and LocalStack support",
+  "description": "AWS AppSync Todo API with CDK and Floki support",
   "main": "index.js",
   "scripts": {
     "build": "tsc && tsc -p lib/appsync/resolvers/tsconfig.json && mkdir -p dist/lib/appsync && cp lib/appsync/schema.graphql dist/lib/appsync/schema.graphql",
@@ -10,20 +10,20 @@
     "cdk": "cdk",
     "codegen": "amplify codegen",
     "deploy": "cdk deploy",
-    "deploy:local": "cdklocal deploy",
+    "deploy:local": "./node_modules/.bin/cdkl deploy",
     "destroy": "cdk destroy",
-    "destroy:local": "cdklocal destroy",
+    "destroy:local": "./node_modules/.bin/cdkl destroy",
     "synth": "cdk synth",
     "bootstrap": "cdk bootstrap",
-    "bootstrap:local": "cdklocal bootstrap",
-    "localstack:start": "localstack start -d",
-    "localstack:stop": "localstack stop"
+    "bootstrap:local": "./node_modules/.bin/cdkl bootstrap",
+    "floci:start": "docker compose up -d",
+    "floci:stop": "docker compose down"
   },
   "keywords": [
     "aws",
     "appsync",
     "cdk",
-    "localstack",
+    "floci",
     "graphql",
     "dynamodb"
   ],
@@ -42,7 +42,8 @@
     "source-map-support": "^0.5.21",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "cdk-local": "^0.16.3"
   },
   "dependencies": {
     "@aws-appsync/utils": "^2.0.3",

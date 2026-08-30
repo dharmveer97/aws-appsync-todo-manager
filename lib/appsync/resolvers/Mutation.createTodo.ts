@@ -1,5 +1,8 @@
 import { util } from '@aws-appsync/utils';
-import type { Context, DynamoDBTransactWriteItemsRequest } from '@aws-appsync/utils';
+import type {
+  Context,
+  DynamoDBTransactWriteItemsRequest,
+} from '@aws-appsync/utils';
 import * as ddb from '@aws-appsync/utils/dynamodb';
 
 export function request(ctx: Context): DynamoDBTransactWriteItemsRequest {
@@ -25,7 +28,7 @@ export function request(ctx: Context): DynamoDBTransactWriteItemsRequest {
     owner,
     createdAt: now,
     updatedAt: now,
-    orderIndex: Math.floor(util.time.nowEpochMilliSeconds() / 1000)
+    orderIndex: Math.floor(util.time.nowEpochMilliSeconds() / 1000),
   };
 
   if (todo.status !== 'ARCHIVED') {
@@ -41,19 +44,19 @@ export function request(ctx: Context): DynamoDBTransactWriteItemsRequest {
         putItem: {
           table: 'Todos',
           key: { id },
-          item: todo
-        }
+          item: todo,
+        },
       },
       {
         updateItem: {
           table: 'Stats',
           key: { id: 'todos_count' },
           update: {
-            count: ddb.operations.increment(1)
-          }
-        }
-      }
-    ]
+            count: ddb.operations.increment(1),
+          },
+        },
+      },
+    ],
   });
 }
 

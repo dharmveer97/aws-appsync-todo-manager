@@ -1,75 +1,70 @@
 import { util } from '@aws-appsync/utils';
+import * as ddb from '@aws-appsync/utils/dynamodb';
 import type { Context, DynamoDBQueryRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBQueryRequest {
-  const { limit = 20, nextToken, filter } = ctx.arguments;
+  const { limit = 20, nextToken, filter, query } = ctx.arguments;
 
-  const queryRequest: DynamoDBQueryRequest = {
-    operation: 'Query',
-    index: 'ActiveIndex',
-    query: {
-      expression: 'activePartition = :activePartition',
-      expressionValues: {
-        ':activePartition': { S: 'ALL_ACTIVE' }
-      }
-    },
-    scanIndexForward: false,
-    limit,
-    nextToken
-  };
+  const filterConditions: Record<string, any>[] = [];
 
   if (filter) {
-    const filters: string[] = [];
-    const expressionValues: Record<string, any> = {};
-    const expressionNames: Record<string, string> = {};
-
     if (filter.status && filter.status.length > 0) {
-      expressionNames['#status'] = 'status';
-      const statusValues = filter.status.map((s: string, i: number) => {
-        const key = `:status${i}`;
-        expressionValues[key] = s;
-        return key;
+      filterConditions.push({
+        status: { in: filter.status },
       });
-      filters.push(`#status IN (${statusValues.join(', ')})`);
     }
 
     if (filter.priority && filter.priority.length > 0) {
-      expressionNames['#priority'] = 'priority';
-      const priorityValues = filter.priority.map((p: string, i: number) => {
-        const key = `:priority${i}`;
-        expressionValues[key] = p;
-        return key;
+      filterConditions.push({
+        priority: { in: filter.priority },
       });
-      filters.push(`#priority IN (${priorityValues.join(', ')})`);
     }
 
     if (filter.category && filter.category.length > 0) {
-      expressionNames['#category'] = 'category';
-      const categoryValues = filter.category.map((c: string, i: number) => {
-        const key = `:category${i}`;
-        expressionValues[key] = c;
-        return key;
+      filterConditions.push({
+        category: { in: filter.category },
       });
-      filters.push(`#category IN (${categoryValues.join(', ')})`);
     }
 
     if (filter.search) {
-      expressionNames['#title'] = 'title';
-      expressionNames['#description'] = 'description';
-      expressionValues[':search'] = filter.search;
-      filters.push('(contains(#title, :search) OR contains(#description, :search))');
-    }
-
-    if (filters.length > 0) {
-      queryRequest.filter = {
-        expression: filters.join(' AND '),
-        expressionNames,
-        expressionValues: util.dynamodb.toMapValues(expressionValues)
-      };
+      filterConditions.push({
+        or: [
+          { title: { contains: filter.search } },
+          { description: { contains: filter.search } },
+          { subtitle: { contains: filter.search } },
+        ],
+      });
     }
   }
 
-  return queryRequest;
+  // Support direct top-level query parameter (unifying searchTodos into listTodos)
+  if (query) {
+    filterConditions.push({
+      or: [
+        { title: { contains: query } },
+        { description: { contains: query } },
+        { subtitle: { contains: query } },
+      ],
+    });
+  }
+
+  let filterObj: any = undefined;
+  if (filterConditions.length === 1) {
+    filterObj = filterConditions[0];
+  } else if (filterConditions.length > 1) {
+    filterObj = { and: filterConditions };
+  }
+
+  return ddb.query({
+    index: 'ActiveIndex',
+    query: {
+      activePartition: { eq: 'ALL_ACTIVE' },
+    },
+    scanIndexForward: false,
+    limit,
+    nextToken,
+    filter: filterObj,
+  });
 }
 
 export function response(ctx: Context) {
@@ -78,6 +73,6 @@ export function response(ctx: Context) {
   }
   return {
     items: ctx.result.items,
-    nextToken: ctx.result.nextToken
+    nextToken: ctx.result.nextToken,
   };
 }

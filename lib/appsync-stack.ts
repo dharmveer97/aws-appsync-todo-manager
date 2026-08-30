@@ -3,10 +3,19 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export class AppSyncTodoStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Helper to resolve compiled JS resolver asset location
+    const getResolverCode = (fileName: string) => {
+      const localPath = path.join(__dirname, 'appsync/resolvers', fileName);
+      const distPath = path.join(__dirname, '../dist/lib/appsync/resolvers', fileName);
+      const targetPath = fs.existsSync(localPath) ? localPath : distPath;
+      return appsync.Code.fromAsset(targetPath);
+    };
 
     // DynamoDB Table with GSIs for efficient querying
     const todosTable = new dynamodb.Table(this, 'TodosTable', {
@@ -120,10 +129,13 @@ export class AppSyncTodoStack extends cdk.Stack {
         }
       },
       xrayEnabled: true,
-      logConfig: {
-        fieldLogLevel: appsync.FieldLogLevel.ALL,
-        excludeVerboseContent: false
-      }
+      // Disable log configuration for local development
+      ...(process.env.USE_LOCALSTACK !== 'true' ? {
+        logConfig: {
+          fieldLogLevel: appsync.FieldLogLevel.ALL,
+          excludeVerboseContent: false
+        }
+      } : {})
     });
 
     // DynamoDB Data Source
@@ -146,112 +158,73 @@ export class AppSyncTodoStack extends cdk.Stack {
       typeName: 'Query',
       fieldName: 'getTodo',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Query.getTodo.js')
-      )
+      code: getResolverCode('Query.getTodo.js')
     });
 
     statsDataSource.createResolver('GetStatsResolver', {
       typeName: 'Query',
       fieldName: 'getStats',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Query.getStats.js')
-      )
+      code: getResolverCode('Query.getStats.js')
     });
 
     todosDataSource.createResolver('ListTodosResolver', {
       typeName: 'Query',
       fieldName: 'listTodos',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Query.listTodos.js')
-      )
+      code: getResolverCode('Query.listTodos.js')
     });
 
     todosDataSource.createResolver('SearchTodosResolver', {
       typeName: 'Query',
       fieldName: 'searchTodos',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Query.searchTodos.js')
-      )
+      code: getResolverCode('Query.listTodos.js')
     });
+
 
     // Mutation Resolvers
     todosDataSource.createResolver('CreateTodoResolver', {
       typeName: 'Mutation',
       fieldName: 'createTodo',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.createTodo.js')
-      )
+      code: getResolverCode('Mutation.createTodo.js')
     });
 
     todosDataSource.createResolver('UpdateTodoResolver', {
       typeName: 'Mutation',
       fieldName: 'updateTodo',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.updateTodo.js')
-      )
+      code: getResolverCode('Mutation.updateTodo.js')
     });
 
     todosDataSource.createResolver('DeleteTodoResolver', {
       typeName: 'Mutation',
       fieldName: 'deleteTodo',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodo.js')
-      )
+      code: getResolverCode('Mutation.deleteTodo.js')
     });
 
-    const deleteTodosGetFn = new appsync.AppsyncFunction(this, 'DeleteTodosGetFn', {
-      api,
-      name: 'DeleteTodosGetFn',
-      dataSource: todosDataSource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosGet.js')
-      )
-    });
-
-    const deleteTodosUpdateFn = new appsync.AppsyncFunction(this, 'DeleteTodosUpdateFn', {
-      api,
-      name: 'DeleteTodosUpdateFn',
-      dataSource: todosDataSource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosUpdate.js')
-      )
-    });
-
-    api.createResolver('DeleteTodosResolver', {
+    todosDataSource.createResolver('DeleteTodosResolver', {
       typeName: 'Mutation',
       fieldName: 'deleteTodos',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.deleteTodosPipeline.js')
-      ),
-      pipelineConfig: [deleteTodosGetFn, deleteTodosUpdateFn]
+      code: getResolverCode('Mutation.deleteTodos.js')
     });
+
 
     todosDataSource.createResolver('UpdateTodoOrderResolver', {
       typeName: 'Mutation',
       fieldName: 'updateTodoOrder',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.updateTodoOrder.js')
-      )
+      code: getResolverCode('Mutation.updateTodoOrder.js')
     });
 
     todosDataSource.createResolver('ReorderTodosResolver', {
       typeName: 'Mutation',
       fieldName: 'reorderTodos',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, 'appsync/resolvers/Mutation.reorderTodos.js')
-      )
+      code: getResolverCode('Mutation.reorderTodos.js')
     });
 
     // Outputs

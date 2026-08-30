@@ -1,12 +1,26 @@
 services:
-  localstack:
-    image: localstack/localstack:latest
+  floci:
+    image: floci/floci:latest
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=appsync,dynamodb,cloudwatch,logs,iam,sts,cloudformation,ssm,s3
-      - DEBUG=0
-      - DEFAULT_REGION=us-east-1
+      - FLOCI_SERVICES=appsync,dynamodb,cloudwatch,logs,iam,sts,cloudformation,ssm,s3
+      - FLOCI_DEBUG=1
+      - FLOCI_DEFAULT_REGION=us-east-1
       - AWS_DEFAULT_REGION=us-east-1
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  floci-ui:
+    image: floci/floci-ui:latest
+    ports:
+      - "4500:4500"
+    environment:
+      - FLOCI_ENDPOINT=http://floci:4566
+      - AWS_ENDPOINT=http://floci:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - floci
+

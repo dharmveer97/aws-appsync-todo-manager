@@ -1,0 +1,118 @@
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Category {
+  WORK
+  PERSONAL
+  SHOPPING
+  HEALTH
+  FINANCE
+  EDUCATION
+  TRAVEL
+  OTHER
+}
+
+type Todo {
+  id: ID!
+  title: String!
+  subtitle: String
+  description: String
+  priority: Priority!
+  status: Status!
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
+  orderIndex: Int!
+  completed: Boolean!
+  owner: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+input CreateTodoInput {
+  title: String!
+  subtitle: String
+  description: String
+  priority: Priority!
+  status: Status
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
+  completed: Boolean
+}
+
+input UpdateTodoInput {
+  id: ID!
+  title: String
+  subtitle: String
+  description: String
+  priority: Priority
+  status: Status
+  category: Category
+  tags: [String!]
+  dueDate: AWSDateTime
+  orderIndex: Int
+  completed: Boolean
+}
+
+input UpdateOrderInput {
+  id: ID!
+  orderIndex: Int!
+}
+
+input TodoFilterInput {
+  status: [Status!]
+  priority: [Priority!]
+  category: [Category!]
+  search: String
+  overdue: Boolean
+}
+
+type Query {
+  getTodo(id: ID!): Todo
+  getStats(id: ID!): Stats
+  listTodos(limit: Int, nextToken: String, filter: TodoFilterInput): TodoConnection
+  searchTodos(query: String!, limit: Int, nextToken: String): TodoConnection
+}
+
+type Mutation {
+  createTodo(input: CreateTodoInput!): Todo
+  updateTodo(input: UpdateTodoInput!): Todo
+  updateTodoOrder(input: UpdateOrderInput!): Todo
+  reorderTodos(todos: [UpdateOrderInput!]!): [Todo]
+  deleteTodo(id: ID!): Todo
+  deleteTodos(ids: [ID!]!): [Todo]
+}
+
+type TodoConnection {
+  items: [Todo]
+  nextToken: String
+}
+
+type Stats {
+  id: ID!
+  count: Int!
+}
+
+type DeleteResult {
+  success: Boolean!
+  deletedIds: [ID!]
+  errors: [String]
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}

@@ -5,7 +5,7 @@ import type { Context, DynamoDBGetItemRequest } from '@aws-appsync/utils';
 export function request(ctx: Context): DynamoDBGetItemRequest {
   const { id } = ctx.arguments;
   return ddb.get({
-    key: { id }
+    key: { id },
   });
 }
 
@@ -15,3 +15,4 @@ export function response(ctx: Context) {
   }
   return ctx.result;
 }
+

@@ -3,6 +3,15 @@ module.exports = {
   roots: ['<rootDir>/test'],
   testMatch: ['**/*.test.ts'],
   transform: {
-    '^.+\\.tsx?$': 'ts-jest'
-  }
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        useESM: false,
+      },
+    ],
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!@aws-appsync/utils)',
+  ],
 };
+

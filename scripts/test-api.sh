@@ -21,7 +21,7 @@ CREATE_RESULT=$(curl -s -X POST "$API_URL" \
   -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "mutation { createTodo(input: { title: \"Test Todo\", description: \"Testing AppSync\", completed: false }) { id title description completed owner createdAt updatedAt } }"
+    "query": "mutation { createTodo(input: { title: \"Test Todo\", description: \"Testing AppSync\", priority: HIGH, completed: false }) { id title description completed owner createdAt updatedAt } }"
   }')
 
 echo "$CREATE_RESULT" | jq .

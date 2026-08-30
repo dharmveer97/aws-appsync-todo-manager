@@ -54,10 +54,52 @@ aws-appsymc/
 
 ### Prerequisites
 - Node.js 18+
-- AWS CLI configured with credentials
+- Docker and Docker Compose
+- AWS CLI configured with credentials (for real AWS) or dummy credentials (for local development)
 - AWS CDK installed globally (`npm install -g aws-cdk`)
 
-### 1. Clone and Install
+### Local Development with Floki (AWS Emulator)
+
+**Option 1: Using the setup script:**
+```bash
+# Run the automated setup script
+./setup-floci.sh
+
+# Follow the instructions to deploy and run
+npm run deploy:local
+```
+
+**Option 2: Manual setup:**
+```bash
+# Start Floki (AWS emulator)
+docker compose up -d
+
+# Wait for Floki to start
+sleep 30
+
+# Set environment variables for local development
+export AWS_ENDPOINT_URL=http://localhost:4566
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export USE_LOCALSTACK=true  # This enables localstack/floki specific configuration
+
+# Install and build project
+npm install
+npm run build
+
+# Bootstrap and deploy CDK stack locally
+npm run bootstrap:local
+npm run deploy:local
+```
+
+After deployment, note the outputs:
+- `GraphQLAPIURL` - Your AppSync API endpoint
+- `GraphQLAPIKey` - Your API key
+
+Update `frontend/.env` with these values.
+
+### 2. Clone and Install
 
 ```bash
 git clone <your-repo-url>
@@ -70,7 +112,7 @@ npm install
 cd frontend && npm install && cd ..
 ```
 
-### 2. Configure Environment
+### 3. Configure Environment
 
 ```bash
 # Copy frontend environment template
@@ -80,23 +122,6 @@ cp frontend/.env.example frontend/.env
 # VITE_APPSYNC_API_URL=your-api-url
 # VITE_APPSYNC_API_KEY=your-api-key
 ```
-
-### 3. Deploy Backend
-
-```bash
-# Bootstrap CDK (first time only)
-cdk bootstrap
-
-# Build and deploy
-npm run build
-cdk deploy --require-approval never
-```
-
-After deployment, note the outputs:
-- `GraphQLAPIURL` - Your AppSync API endpoint
-- `GraphQLAPIKey` - Your API key
-
-Update `frontend/.env` with these values.
 
 ### 4. Seed Database
 
@@ -113,6 +138,19 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+## 🌍 Production Deployment
+
+For production deployment to real AWS:
+
+```bash
+# Bootstrap CDK (first time only)
+cdk bootstrap
+
+# Build and deploy
+npm run build
+cdk deploy --require-approval never
+```
 
 ## 🔧 CRUD Operations
 
@@ -189,7 +227,11 @@ type Todo {
 ```bash
 npm run build      # Compile TypeScript
 npm run deploy     # Deploy to AWS
+npm run deploy:local  # Deploy to local Floki/LocalStack
 npm run destroy    # Remove AWS resources
+npm run destroy:local  # Remove local resources
+npm run floci:start # Start Floki using Docker Compose
+npm run floci:stop  # Stop Floki using Docker Compose
 cdk synth          # Generate CloudFormation
 ```
 

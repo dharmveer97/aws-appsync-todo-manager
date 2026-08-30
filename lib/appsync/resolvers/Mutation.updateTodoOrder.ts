@@ -1,27 +1,18 @@
+import { util } from '@aws-appsync/utils';
+import * as ddb from '@aws-appsync/utils/dynamodb';
 import type { Context, DynamoDBUpdateItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBUpdateItemRequest {
-  const { input } = ctx.arguments;
-  const { id, orderIndex } = input;
+  const { id, orderIndex } = ctx.arguments.input;
   const now = util.time.nowISO8601();
 
-  return {
-    operation: 'UpdateItem',
-    key: {
-      id: { S: id }
-    },
+  return ddb.update({
+    key: { id },
     update: {
-      expression: 'SET #orderIndex = :orderIndex, #updatedAt = :updatedAt',
-      expressionNames: {
-        '#orderIndex': 'orderIndex',
-        '#updatedAt': 'updatedAt'
-      },
-      expressionValues: util.dynamodb.toMapValues({
-        ':orderIndex': orderIndex,
-        ':updatedAt': now
-      })
-    }
-  };
+      orderIndex,
+      updatedAt: now,
+    },
+  });
 }
 
 export function response(ctx: Context) {
@@ -30,3 +21,4 @@ export function response(ctx: Context) {
   }
   return ctx.result;
 }
+

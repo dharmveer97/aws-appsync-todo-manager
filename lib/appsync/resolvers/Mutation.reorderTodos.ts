@@ -3,6 +3,7 @@ import {
   DynamoDBTransactWriteItemsRequest,
   util,
 } from '@aws-appsync/utils';
+import * as ddb from '@aws-appsync/utils/dynamodb';
 
 export function request(ctx: Context): DynamoDBTransactWriteItemsRequest {
   const { todos } = ctx.arguments;
@@ -12,29 +13,20 @@ export function request(ctx: Context): DynamoDBTransactWriteItemsRequest {
   }
 
   const now = util.time.nowISO8601();
-  const transactItems = todos.map((item: any) => ({
-    table: 'Todos',
-    operation: 'UpdateItem',
-    key: {
-      id: { S: item.id },
-    },
-    update: {
-      expression: 'SET #orderIndex = :orderIndex, #updatedAt = :updatedAt',
-      expressionNames: {
-        '#orderIndex': 'orderIndex',
-        '#updatedAt': 'updatedAt',
+  const items = todos.map((item: any) => ({
+    updateItem: {
+      table: 'Todos',
+      key: { id: item.id },
+      update: {
+        orderIndex: item.orderIndex,
+        updatedAt: now,
       },
-      expressionValues: util.dynamodb.toMapValues({
-        ':orderIndex': item.orderIndex,
-        ':updatedAt': now,
-      }),
     },
   }));
 
-  return {
-    operation: 'TransactWriteItems',
-    transactItems,
-  };
+  return ddb.transactWrite({
+    items,
+  });
 }
 
 export function response(ctx: Context) {

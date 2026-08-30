@@ -1,14 +1,11 @@
 import 'dotenv/config';
 import type { Status, Priority } from './src/lib/types';
 
-const API_URL = process.env.VITE_APPSYNC_API_URL!;
-const API_KEY = process.env.VITE_APPSYNC_API_KEY!;
-
-if (!API_URL || !API_KEY) {
-  throw new Error(
-    'Missing VITE_APPSYNC_API_URL or VITE_APPSYNC_API_KEY. Check frontend/.env file',
-  );
+let API_URL = process.env.VITE_APPSYNC_API_URL || 'http://localhost:3000/api/graphql';
+if (API_URL.startsWith('/')) {
+  API_URL = `http://localhost:3000${API_URL}`;
 }
+const API_KEY = process.env.VITE_APPSYNC_API_KEY || 'da2-b5237c1';
 
 const STATUSES: Status[] = [
   'PENDING',

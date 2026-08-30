@@ -1,15 +1,12 @@
 import { util } from '@aws-appsync/utils';
+import * as ddb from '@aws-appsync/utils/dynamodb';
 import type { Context, DynamoDBGetItemRequest } from '@aws-appsync/utils';
 
 export function request(ctx: Context): DynamoDBGetItemRequest {
   const { id } = ctx.arguments;
-
-  return {
-    operation: 'GetItem',
-    key: {
-      id: { S: id }
-    }
-  };
+  return ddb.get({
+    key: { id },
+  });
 }
 
 export function response(ctx: Context) {
@@ -22,3 +19,4 @@ export function response(ctx: Context) {
   }
   return result;
 }
+
